@@ -1,0 +1,210 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us - Financial Sathi</title>
+  <meta name="description" content="Get in touch with Financial Sathi for support or inquiries.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.5.0/remixicon.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="globals.css">
+  <script src="chatbot.js"></script>
+</head>
+<body class="min-h-screen bg-white">
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-white shadow-sm border-b">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center">
+          <img src="https://static.readdy.ai/image/d5e790301ee3a0515674f3f81e61df70/8190a21123a641b5c0dbcfbaa4a1c4bc.png" alt="Financial Sathi Logo" width="40" height="40" class="mr-3">
+          <h1 class="text-2xl font-bold text-blue-600" style="font-family: 'Pacifico', serif;">Financial Sathi</h1>
+        </div>
+        <nav class="hidden md:flex space-x-8">
+          <a href="index.html" class="text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">Home</a>
+          <a href="emi-calculator.html" class="text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">EMI Calculator</a>
+          <a href="index.html#products" class="text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">Products</a>
+          <a href="contact.html" class="text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">Contact</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contact Section -->
+  <section class="py-12 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-4xl font-bold text-gray-900 mb-4">Contact Us</h2>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto">We're here to help you with your financial queries. Reach out to us!</p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Send Us a Message</h3>
+          <form onsubmit="handleContactSubmit(event)">
+            <div class="space-y-4">
+              <div>
+                <label for="name" class="block text-sm font-semibold text-gray-700">Name</label>
+                <input type="text" id="name" required class="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Your Name">
+              </div>
+              <div>
+                <label for="email" class="block text-sm font-semibold text-gray-700">Email</label>
+                <input type="email" id="email" required class="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Your Email">
+              </div>
+              <div>
+                <label for="message" class="block text-sm font-semibold text-gray-700">Message</label>
+                <textarea id="message" required class="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 h-32 resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Your Message"></textarea>
+              </div>
+              <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all">Send Message</button>
+            </div>
+          </form>
+        </div>
+        <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6">
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Contact Information</h3>
+          <div class="space-y-4">
+            <div class="flex items-center">
+              <i class="ri-mail-line text-2xl text-blue-600 mr-3"></i>
+              <p class="text-gray-700">Email: <a href="mailto:techunseen56@gmail.com" class="text-blue-600 hover:underline">techunseen56@gmail.com</a></p>
+            </div>
+            <div class="flex items-center">
+              <i class="ri-phone-line text-2xl text-blue-600 mr-3"></i>
+              <p class="text-gray-700">Phone: +91-123-456-7890</p>
+            </div>
+            <div class="flex items-center">
+              <i class="ri-map-pin-line text-2xl text-blue-600 mr-3"></i>
+              <p class="text-gray-700">Address: Financial Sathi, Mumbai, India</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Chatbot -->
+  <div id="chatbot" class="fixed bottom-4 right-4 w-96 h-[500px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 border hidden">
+    <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-4 rounded-t-2xl text-white">
+      <div class="flex justify-between items-center">
+        <div>
+          <h4 class="font-bold">Financial Sathi AI</h4>
+          <p class="text-sm opacity-90">Multilingual Assistant</p>
+        </div>
+        <button onclick="toggleChatbot()" class="text-white hover:text-gray-200 w-6 h-6 flex items-center justify-center cursor-pointer">
+          <i class="ri-close-line text-xl"></i>
+        </button>
+      </div>
+    </div>
+    <div class="flex-1 overflow-y-auto p-4 space-y-4" id="chat-messages">
+      <div class="flex justify-start">
+        <div class="max-w-[80%] p-3 rounded-2xl bg-gray-100 text-gray-800">
+          <p class="text-sm whitespace-pre-line">Hi! I'm your Financial Sathi AI assistant. How can I help you today?</p>
+          <p class="text-xs opacity-70 mt-1"></p>
+        </div>
+      </div>
+    </div>
+    <form onsubmit="handleChatSubmit(event)" class="p-4 border-t">
+      <div class="flex items-center space-x-2">
+        <input type="text" id="chat-input" placeholder="Ask in any Indian language... / किसी भी भाषा में पूछें..." class="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        <button type="button" onclick="toggleVoiceRecognition()" class="p-2 rounded-full transition-colors w-10 h-10 flex items-center justify-center cursor-pointer bg-gray-100 text-gray-600 hover:bg-gray-200" id="mic-button">
+          <i class="ri-mic-line"></i>
+        </button>
+        <button type="submit" class="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors w-10 h-10 flex items-center justify-center cursor-pointer whitespace-nowrap">
+          <i class="ri-send-plane-fill"></i>
+        </button>
+      </div>
+      <div class="text-xs text-gray-500 mt-2 text-center">मैं हिंदी, अंग्रेजी और हिंग्लिश में जवाब दे सकता हूं | I can respond in Hindi, English & Hinglish</div>
+    </form>
+  </div>
+  <button onclick="toggleChatbot()" class="fixed bottom-6 right-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-full shadow-lg hover:scale-110 transition-transform z-40 w-14 h-14 flex items-center justify-center cursor-pointer" id="chatbot-button">
+    <i class="ri-robot-fill text-2xl"></i>
+  </button>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="grid md:grid-cols-4 gap-8">
+        <div>
+          <h3 class="text-xl font-bold mb-4" style="font-family: 'Pacifico', serif;">Financial Sathi</h3>
+          <p class="text-gray-400">Your trusted partner for smart financial decisions. Compare, analyze, and choose the best financial products with AI-powered insights.</p>
+          <div class="mt-4">
+            <p class="text-sm text-gray-400">Contact: techunseen56@gmail.com</p>
+          </div>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Products</h4>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="index.html#credit-cards" class="hover:text-white transition-colors">Credit Cards</a></li>
+            <li><a href="index.html#loans" class="hover:text-white transition-colors">Personal Loans</a></li>
+            <li><a href="index.html#investments" class="hover:text-white transition-colors">Mutual Funds</a></li>
+            <li><a href="index.html#investments" class="hover:text-white transition-colors">Savings Accounts</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Tools</h4>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="emi-calculator.html" class="hover:text-white transition-colors">EMI Calculator</a></li>
+            <li><a href="https://sales.gromo.in/c/p0deEx81JDJb_6bEH0DHi?versionCode=null" class="hover:text-white transition-colors">Credit Score Check</a></li>
+            <li><a href="index.html#emi-calculator" class="hover:text-white transition-colors">Loan Eligibility</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Support</h4>
+          <ul class="space-y-2 text-gray-400">
+            <li><button onclick="toggleChatbot()" class="hover:text-white transition-colors cursor-pointer">Help Center</button></li>
+            <li><a href="contact.html" class="hover:text-white transition-colors">Contact Us</a></li>
+            <li><a href="privacy-policy.html" class="hover:text-white transition-colors">Privacy Policy</a></li>
+            <li><a href="terms-of-service.html" class="hover:text-white transition-colors">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+        <p>© 2024 Financial Sathi. All rights reserved. | Made with ❤️ for better financial decisions</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function handleContactSubmit(event) {
+      event.preventDefault();
+      alert("Message submitted! We'll get back to you soon.");
+      document.querySelector('form').reset();
+    }
+  </script>
+</body>
+</html>
