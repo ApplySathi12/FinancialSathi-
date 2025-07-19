@@ -1,0 +1,1233 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financial Sathi</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/next@13.4.19/dist/next.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.20.15/babel.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  <style>
+    .slider::-webkit-slider-thumb {
+      appearance: none;
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: #3B82F6;
+      cursor: pointer;
+    }
+
+    .slider::-moz-range-thumb {
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: #3B82F6;
+      cursor: pointer;
+      border: none;
+    }
+
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .line-clamp-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    'use client';
+
+    const { useState, useEffect, useRef } = React;
+    const Link = ({ href, children, className }) => (
+      <a href={href} className={className}>{children}</a>
+    );
+    const Image = ({ src, alt, width, height, className }) => (
+      <img src={src} alt={alt} width={width} height={height} className={className} />
+    );
+
+    // Updated with real product data and affiliate links
+    const creditCards = [
+      {
+        id: 1,
+        name: "SBI SimpleCLICK",
+        bank: "State Bank of India",
+        category: "lifestyle",
+        features: ["10X Reward Points on partners", "₹500 e-Voucher on joining", "Simple application process"],
+        fees: "Annual fee waived",
+        rating: 4.3,
+        icon: "",
+        link: "https://sales.gromo.in/bn/ShpCgQbKD6"
+      },
+      {
+        id: 2,
+        name: "SBI Cashback Card",
+        bank: "State Bank of India", 
+        category: "cashback",
+        features: ["5% Cashback on online spends", "1% fuel surcharge waiver", "Wide acceptance network"],
+        fees: "Annual fee applicable",
+        rating: 4.5,
+        icon: "",
+        link: "https://sales.gromo.in/cz/ShpCgQbKD6"
+      },
+      {
+        id: 3,
+        name: "IRCTC SBI Platinum",
+        bank: "State Bank of India",
+        category: "travel",
+        features: ["Up to 10% Value Back on Rail tickets", "Complimentary railway lounge access", "Travel insurance benefits"],
+        fees: "₹499 annual fee",
+        rating: 4.4,
+        icon: "",
+        link: "https://sales.gromo.in/bz/ShpCgQbKD6"
+      },
+      {
+        id: 4,
+        name: "HDFC Millennia",
+        bank: "HDFC Bank",
+        category: "cashback",
+        features: ["Welcome benefit ₹300", "5X reward points online", "Cashback on e-commerce"],
+        fees: "₹1,000 annual fee",
+        rating: 4.6,
+        icon: "",
+        link: "https://sales.gromo.in/bn/ShpCgQbKD6"
+      },
+      {
+        id: 5,
+        name: "Swiggy HDFC Card",
+        bank: "HDFC Bank",
+        category: "lifestyle",
+        features: ["10% Cashback on Swiggy", "3 iklan-month Swiggy One free", "Dining rewards"],
+        fees: "₹500 annual fee",
+        rating: 4.2,
+        icon: "",
+        link: "https://sales.gromo.in/sh/ShpCgQbKD6"
+      },
+      {
+        id: 6,
+        name: "HSBC Visa Platinum",
+        bank: "HSBC Bank",
+        category: "lifestyle",
+        features: ["Lifetime Free Credit Card", "2 Reward Points per ₹150 spent", "Global acceptance"],
+        fees: "Lifetime Free",
+        rating: 4.1,
+        icon: "",
+        link: "https://sales.gromo.in/hz/ShpCgQbKD6"
+      },
+      {
+        id: 7,
+        name: "TATA Neu HDFC Card", 
+        bank: "HDFC Bank",
+        category: "cashback",
+        features: ["Up to 10% cashback as NeuCoins", "Complimentary Lounge Access", "TATA brand benefits"],
+        fees: "₹499 annual fee",
+        rating: 4.3,
+        icon: "",
+        link: "https://sales.gromo.in/tn/ShpCgQbKD6"
+      },
+      {
+        id: 8,
+        name: "Bajaj Finserv EMI Card",
+        bank: "Bajaj Finserv",
+        category: "emi",
+        features: ["Credit up to ₹3 Lacs", "100% Digital Process", "No-cost EMI options"],
+        fees: "Processing fee applicable",
+        rating: 4.0,
+        icon: "",
+        link: "https://sales.gromo.in/bf/ShpCgQbKD6"
+      }
+    ];
+
+    const loans = [
+      {
+        id: 1,
+        name: "Incred Finance Personal Loan",
+        bank: "Incred Finance",
+        rate: "1.33% p.m. onwards",
+        amount: "Up to ₹10 Lakhs",
+        tenure: "12 - 60 months",
+        processing: "Minimal charges",
+        link: "https://loan.gromo.in/in/ShpCgQbKD6"
+      },
+      {
+        id: 2,
+        name: "IDFC First Bank Personal Loan",
+        bank: "IDFC First Bank",
+        rate: "10.49% p.a. onwards",
+        amount: "Up to ₹10 Lakhs", 
+        tenure: "12 - 60 months",
+        processing: "ZERO foreclosure charges",
+        link: "https://loan.gromo.in/lo/ShpCgQbKD6"
+      },
+      {
+        id: 3,
+        name: "Fi Money Personal Loan",
+        bank: "Fi Money",
+        rate: "12% p.a. onwards",
+        amount: "Up to ₹5,00,000",
+        tenure: "6 - 36 months", 
+        processing: "100% digital & paperless",
+        link: "https://loan.gromo.in/ml/ShpCgQbKD6"
+      },
+      {
+        id: 4,
+        name: "Fatakpay Credit Line",
+        bank: "Fatakpay",
+        rate: "Flexible rates",
+        amount: "₹20,000 in 5 Mins",
+        tenure: "Flexible tenure",
+        processing: "No Document required",
+        link: "https://loan.gromo.in/fz/ShpCgQbKD6"
+      }
+    ];
+
+    const investmentProducts = [
+      {
+        id: 1,
+        name: "Axis Mutual Fund SIP",
+        provider: "Axis Mutual Fund",
+        features: ["Start your SIP with ₹100", "Professional fund management", "Diversified portfolio options"],
+        minInvestment: "₹100",
+        returns: "Market-linked returns",
+        link: "https://sales.gromo.in/af/ShpCgQbKD6"
+      },
+      {
+        id: 2,
+        name: "Micro Mutual Fund",
+        provider: "Micro Mutual Fund",
+        features: ["10 SIPs in 1 Transaction", "Start with just ₹1000", "Multiple fund options"],
+        minInvestment: "₹1000",
+        returns: "Market-linked returns",
+        link: "https://sales.gromo.in/mc/ShpCgQbKD6"
+      }
+    ];
+
+    const savingsInvestmentProducts = [
+      {
+        id: 1,
+        name: "Upstox Demat Account",
+        provider: "Upstox",
+        category: "demat",
+        features: ["Zero brokerage (eq. delivery)", "Fast account opening", "Advanced trading platform"],
+        fees: "Zero account opening fee",
+        link: "https://sales.gromo.in/up/ShpCgQbKD6"
+      },
+      {
+        id: 2,
+        name: "Angel One Demat Account",
+        provider: "Angel One",
+        category: "demat",
+        features: ["Flat trading charges", "Research recommendations", "Mobile trading app"],
+        fees: "Competitive charges",
+        link: "https://leads.banksathi.com/?h=R3BGR0c2a28zNE1PYU8rNXZKSFQ2QT09"
+      },
+      {
+        id: 3,
+        name: "Kotak 811 Savings Account",
+        provider: "Kotak Mahindra Bank",
+        category: "savings",
+        features: ["Open in 3 mins", "Zero balance account", "Digital banking features"],
+        fees: "No minimum balance",
+        link: "https://sales.gromo.in/kt/ShpCgQbKD6"
+      },
+      {
+        id: 4,
+        name: "Tide Business Account",
+        provider: "Tide",
+        category: "business",
+        features: ["Zero balance account", "Earn up to 1.5% cashback", "Business banking solutions"],
+        fees: "Zero balance required",
+        link: "https://sales.gromo.in/tr/ShpCgQbKD6"
+      },
+      {
+        id: 5,
+        name: "Stable Money FD",
+        provider: "Stable Money",
+        category: "fd",
+        features: ["Guaranteed returns", "Flexible tenures", "Higher interest rates"],
+        fees: "No hidden charges",
+        link: "https://leads.banksathi.com/?h=RXFjTWE3M0NGS2czM3ZRVVZIWWZ1Zz09"
+      }
+    ];
+
+    const creditScoreCheck = {
+      name: "Free Credit Score Check",
+      features: ["Check score for FREE", "Customised recommendations", "Simple & quick process"],
+      link: "https://sales.gromo.in/c/p0deEx81JDJb_6bEH0DHi?versionCode=null"
+    };
+
+    function FinancialSathi() {
+      const [activeFilter, setActiveFilter] = useState('all');
+      const [loanAmount, setLoanAmount] = useState(500000);
+      const [interestRate, setInterestRate] = useState(12);
+      const [tenure, setTenure] = useState(24);
+      const [emi, setEmi] = useState(0);
+      const [showChatbot, setShowChatbot] = useState(false);
+      const [showRecommendModal, setShowRecommendModal] = useState(false);
+      const [chatMessages, setChatMessages] = useState([
+        { type: 'bot', content: 'Hi! I\'m your Financial Sathi AI assistant. How can I help you today?', timestamp: new Date() }
+      ]);
+      const [chatInput, setChatInput] = useState('');
+      const [isListening, setIsListening] = useState(false);
+      const [userNeeds, setUserNeeds] = useState('');
+      const [aiRecommendation, setAiRecommendation] = useState('');
+      const [isLoadingRecommendation, setIsLoadingRecommendation] = useState(false);
+      const recognitionRef = useRef(null);
+      const chatEndRef = useRef(null);
+
+      // EMI Calculation
+      useEffect(() => {
+        const monthlyRate = interestRate / 12 / 100;
+        const emiValue = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, tenure)) / 
+                        (Math.pow(1 + monthlyRate, tenure) - 1);
+        setEmi(Math.round(emiValue));
+      }, [loanAmount, interestRate, tenure]);
+
+      // Speech Recognition Setup
+      useEffect(() => {
+        if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
+          const SpeechRecognition = window.webkitSpeechRecognition;
+          recognitionRef.current = new SpeechRecognition();
+          recognitionRef.current.continuous = false;
+          recognitionRef.current.interimResults = false;
+          recognitionRef.current.lang = 'en-US';
+
+          recognitionRef.current.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            setChatInput(transcript);
+            setIsListening(false);
+          };
+
+          recognitionRef.current.onerror = () => {
+            setIsListening(false);
+          };
+
+          recognitionRef.current.onend = () => {
+            setIsListening(false);
+          };
+        }
+      }, []);
+
+      // Auto-scroll chat
+      useEffect(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, [chatMessages]);
+
+      const filteredCards = activeFilter === 'all' 
+        ? creditCards 
+        : activeFilter === 'emi'
+          ? creditCards.filter(card => card.category === 'emi')
+          : creditCards.filter(card => card.category === activeFilter);
+
+      const toggleVoiceRecognition = () => {
+        if (isListening) {
+          recognitionRef.current?.stop();
+          setIsListening(false);
+        } else {
+          if (recognitionRef.current) {
+            recognitionRef.current.start();
+            setIsListening(true);
+          }
+        }
+      };
+
+      const handleChatSubmit = async (e) => {
+        e.preventDefault();
+        if (!chatInput.trim()) return;
+
+        const userMessage = {
+          type: 'user',
+          content: chatInput,
+          timestamp: new Date()
+        };
+
+        setChatMessages(prev => [...prev, userMessage]);
+
+        // Enhanced multilingual knowledge base
+        const detectLanguage = (text) => {
+          const hindiPattern = /[\\u0900-\\u097F]/;
+          const englishPattern = /^[a-zA-Z0-9\\s.,!?\'"()-]+$/;
+          
+          if (hindiPattern.test(text)) return 'hindi';
+          if (englishPattern.test(text)) return 'english';
+          return 'hinglish';
+        };
+
+        const userLanguage = detectLanguage(chatInput);
+        const lowerInput = chatInput.toLowerCase();
+
+        // Comprehensive multilingual responses
+        const getResponse = (topic, language) => {
+          const responses = {
+            'credit_card_request': {
+              'hindi': 'आपको क्रेडिट कार्ड चाहिए? यहाँ मेरी सिफारिशें हैं:\n\n🏆 **टॉप रिकमेंडेशन:**\n• SBI Cashback Card - ऑनलाइन खरीदारी पर 5% कैशबैक\n• HDFC Millennia - ₹300 वेलकम बेनिफिट + 5X रिवार्ड पॉइंट्स\n• HSBC Visa Platinum - लाइफटाइम फ्री कार्ड\n\nकौन सा कार्ड आपकी जरूरत के लिए सबसे अच्छा है?',
+              'english': 'Looking for a credit card? Here are my top recommendations:\n\n🏆 **Best Options:**\n• SBI Cashback Card - 5% cashback on online spends\n• HDFC Millennia - ₹300 welcome benefit + 5X reward points\n• HSBC Visa Platinum - Lifetime free card\n\nWhich type of benefits are you looking for?',
+              'hinglish': 'Credit card chahiye? Yahan hai mere best suggestions:\n\n🏆 **Top Recommendations:**\n• SBI Cashback Card - Online shopping par 5% cashback\n• HDFC Millennia - ₹300 welcome benefit + 5X reward points\n• HSBC Visa Platinum - Lifetime free card\n\nAap kya prefer karte ho - cashback ya travel benefits?'
+            },
+            'personal_loan': {
+              'hindi': 'पर्सनल लोन के लिए ये बेहतरीन विकल्प हैं:\n\n💰 **बेस्ट लोन ऑप्शन:**\n• Incred Finance - 1.33% प्रति माह से शुरू\n• IDFC First Bank - ZERO फोरक्लोज़र चार्जेस\n• Fi Money - 100% डिजिटल प्रोसेस\n\nकितनी राशि चाहिए और कितने समय के लिए?',
+              'english': 'For personal loans, here are recherche best options:\n\n💰 **Top Loan Options:**\n• Incred Finance - Starting from 1.33% p.m.\n• IDFC First Bank - ZERO foreclosure charges\n• Fi Money - 100% digital process\n\nWhat loan amount and tenure are you looking for?',
+              'hinglish': 'Personal loan ke liye ye best options hain:\n\n💰 **Top Loan Options:**\n• Incred Finance - 1.33% per month se start\n• IDFC First Bank - ZERO foreclosure charges\n• Fi Money - 100% digital process\n\nKitna amount chahiye aur kitne time ke liye?'
+            },
+            'emi_calculator': {
+              'hindi': 'EMI कैलकुलेट करना चाहते हैं? हमारा EMI कैलकुलेटर उपयोग करें:\n\n🧮 **EMI Calculator Features:**\n• तुरंत EMI गणना\n• इंटरेस्ट ब्रेकडाउन\n• विभिन्न लोन प्रकारों के लिए प्रीसेट\n\nपेज के ऊपर EMI Calculator सेक्शन देखें या विस्तृत कैलकुलेटर के लिए लिंक पर क्लिक करें।',
+              'english': 'Want to calculate EMI? Use our EMI Calculator:\n\n🧮 **EMI Calculator Features:**\n• Instant EMI calculation\n• Interest breakdown\n• Presets for different loan types\n\nCheck the EMI Calculator section above or click for detailed calculator.',
+              'hinglish': 'EMI calculate karna hai? Hamare EMI Calculator use karo:\n\n🧮 **EMI Calculator Features:**\n• Instant EMI calculation\n• Interest breakdown\n• Different loan types ke liye presets\n\nUpar EMI Calculator section dekho ya detailed calculator ke liye click karo.'
+            },
+            'investment': {
+              'hindi': 'निवेश के लिए ये बेहतरीन विकल्प हैं:\n\n📈 **निवेश के ऑप्शन:**\n• Axis Mutual Fund - ₹100 से SIP शुरू करें\n• Micro Mutual Fund - ₹1000 में 10 SIP एक साथ\n• Upstox Demat Account - जीरो ब्रोकरेज\n\nकौन सा निवेश आपको पसंद है - SIP या Trading?',
+              'english': 'For investments, here are great options:\n\n📈 **Investment Options:**\n• Axis Mutual Fund - Start SIP with ₹100\n• Micro Mutual Fund - 10 SIPs in ₹1000\n• Upstox Demat Account - Zero brokerage\n\nWhat type of investment interests you - SIP or Trading?',
+              'hinglish': 'Investment ke liye ye great options hain:\n\n📈 **Investment Options:**\n• Axis Mutual Fund - ₹100 se SIP start karo\n• Micro Mutual Fund - ₹1000 me 10 SIP ek saath\n• Upstox Demat Account - Zero brokerage\n\nKya prefer karte ho - SIP ya Trading?'
+            },
+            'help_general': {
+              'hindi': 'मैं आपकी निम्नलिखित चीजों में मदद कर सकता हूं:\n\n🔹 क्रेडिट कार्ड की जानकारी और सिफारिशें\n🔹 पर्सनल लोन और EMI कैलकुलेशन\n🔹 म्यूचुअल फंड और SIP की जानकारी\n🔹 सेविंग्स अकाउंट और डीमैट अकाउंट\n🔹 इन्वेस्टमेंट की सलाह\n\nआप किस बारे में जानना चाहते हैं?',
+              'english': 'I can help you with:\n\n🔹 Credit card information and recommendations\n🔹 Personal loans and EMI calculations\n🔹 Mutual funds and SIP information\n🔹 Savings and demat accounts\n🔹 Investment advice\n\nWhat would you like to know about?',
+              'hinglish': 'Main aapki help kar sakta hun:\n\n🔹 Credit card information aur recommendations\n🔹 Personal loans aur EMI calculations\n🔹 Mutual funds aur SIP ki information\n🔹 Savings aur demat accounts\n🔹 Investment advice\n\nAap kya jaanna chahte ho?'
+            }
+          };
+
+          return responses[topic]?.[language] || responses[topic]?.['hinglish'] || responses['help_general'][language];
+        };
+
+        let botResponse = '';
+
+        // Enhanced keyword detection with multilingual support
+        if (lowerInput.includes('credit card') || lowerInput.includes('क्रेडिट कार्ड') || lowerInput.includes('credit card chahiye') || lowerInput.includes('card')) {
+          botResponse = getResponse('credit_card_request', userLanguage);
+        } else if (lowerInput.includes('loan') || lowerInput.includes('लोन') || lowerInput.includes('personal loan') || lowerInput.includes('पर्सनल लोन')) {
+          botResponse = getResponse('personal_loan', userLanguage);
+        } else if (lowerInput.includes('emi') || lowerInput.includes('ईएमआई') || lowerInput.includes('calculator') || lowerInput.includes('कैलकुलेटर')) {
+          botResponse = getResponse('emi_calculator', userLanguage);
+        } else if (lowerInput.includes('investment') || lowerInput.includes('निवेश') || lowerInput.includes('sip') || lowerInput.includes('mutual fund') || lowerInput.includes('म्यूचुअल फंड')) {
+          botResponse = getResponse('investment', userLanguage);
+        } else if (lowerInput.includes('cashback') || lowerInput.includes('कैशबैक')) {
+          if (userLanguage === 'hindi') {
+            botResponse = 'कैशबैक कार्ड के लिए मैं SBI Cashback Card (ऑनलाइन पर 5% कैशबैक) या HDFC Millennia (5X रिवार्ड पॉइंट्स) की सिफारिश करता हूं।';
+          } else if (userLanguage === 'english') {
+            botResponse = 'For cashback cards, I recommend SBI Cashback Card (5% on online spends) or HDFC Millennia (5X reward points online).';
+          } else {
+            botResponse = 'Cashback cards ke liye SBI Cashback Card (online par 5% cashback) ya HDFC Millennia (5X reward points) recommend karta hun.';
+          }
+        } else if (lowerInput.includes('travel') || lowerInput.includes('यात्रा')) {
+          if (userLanguage === 'hindi') {
+            botResponse = 'ट्रेवल के लिए IRCTC SBI Platinum कार्ड बेस्ट है - रेल टिकट पर 10% तक वैल्यू बैक मिलता है।';
+          } else if (userLanguage === 'english') {
+            botResponse = 'For travel, IRCTC SBI Platinum offers up to 10% value back on rail tickets and complimentary railway lounge access.';
+          } else {
+            botResponse = 'Travel ke liye IRCTC SBI Platinum best hai - rail tickets par 10% tak value back milta hai.';
+          }
+        } else if (lowerInput.includes('free') || lowerInput.includes('फ्री') || lowerInput.includes('lifetime free')) {
+          if (userLanguage === 'hindi') {
+            botResponse = 'फ्री कार्ड के लिए HSBC Visa Platinum बेस्ट है - लाइफटाइम फ्री और 2 रिवार्ड पॉइंट्स हर ₹150 पर।';
+          } else if (userLanguage === 'english') {
+            botResponse = 'HSBC Visa Platinum is a Lifetime Free Credit Card offering 2 Reward Points per ₹150 spent with global acceptance.';
+          } else {
+            botResponse = 'Free card ke liye HSBC Visa Platinum best hai - lifetime free aur har ₹150 par 2 reward points.';
+          }
+        } else {
+          botResponse = getResponse('help_general', userLanguage);
+        }
+
+        setTimeout(() => {
+          const botMessage = {
+            type: 'bot',
+            content: botResponse,
+            timestamp: new Date()
+          };
+          setChatMessages(prev => [...prev, botMessage]);
+        }, 1000);
+
+        setChatInput('');
+      };
+
+      const handleAIRecommendation = async () => {
+        if (!userNeeds.trim()) return;
+
+        setIsLoadingRecommendation(true);
+
+        // Local recommendation logic based on user needs with real products
+        setTimeout(() => {
+          const lowerNeeds = userNeeds.toLowerCase();
+          let recommendation = '';
+
+          if (lowerNeeds.includes('travel') || lowerNeeds.includes('flight') || lowerNeeds.includes('train') || lowerNeeds.includes('railway')) {
+            recommendation = `Based on your travel preferences, I recommend:\n\n🏆 **Top Recommendation: IRCTC SBI Platinum**\n- Up to 10% Value Back on Rail tickets\n- Complimentary railway lounge access\n- Travel insurance benefits\n- Annual fee: ₹499\n\n🥈 **Alternative: TATA Neu HDFC Card**\n- Up to 10% cashback as NeuCoins\n- Complimentary Lounge Access\n- Wide acceptance for travel bookings\n- Annual fee: ₹499\n\nThese cards offer excellent travel benefits and rewards for frequent travelers.`;
+          } else if (lowerNeeds.includes('cashback') || lowerNeeds.includes('shopping') || lowerNeeds.includes('online')) {
+            recommendation = `Based on your cashback and shopping preferences, I recommend:\n\n🏆 **Top Recommendation: SBI Cashback Card**\n- 5% Cashback on online spends\n- 1% fuel surcharge waiver\n- Wide acceptance network\n- Competitive annual fee\n\n🥈 **Alternative: HDFC Millennia**\n- Welcome benefit ₹300\n- 5X reward points online\n- Cashback on e-commerce platforms\n- Annual fee: ₹1,000\n\nThese cards maximize your cashback earnings on regular spending.`;
+          } else if (lowerNeeds.includes('dining') || lowerNeeds.includes('food') || lowerNeeds.includes('swiggy') || lowerNeeds.includes('restaurant')) {
+            recommendation = `Based on your dining and food preferences, I recommend:\n\n🏆 **Top Recommendation: Swiggy HDFC Card**\n- 10% Cashback on Swiggy orders\n- 3-month Swiggy One free membership\n- Dining rewards and benefits\n- Annual fee: ₹500\n\n🥈 **Alternative: SBI SimpleCLICK**\n- 10X Reward Points on partners\n- ₹500 e-Voucher on joining\n- Simple application process\n- Annual fee waived\n\nPerfect cards for food lovers and frequent diners!`;
+          } else if (lowerNeeds.includes('free') || lowerNeeds.includes('no fee') || lowerNeeds.includes('lifetime free')) {
+            recommendation = `Based on your preference for no-fee cards, I recommend:\n\n🏆 **Top Recommendation: HSBC Visa Platinum**\n- Lifetime Free Credit Card\n- 2 Reward Points per ₹150 spent\n- Global acceptance\n- No annual fee ever\n\n🥈 **Alternative: SBI SimpleCLICK**\n- Annual fee waived\n- 10X Reward Points on partners\n- ₹500 e-Voucher on joining\n- Simple application process\n\nThese cards offer great value without annual fee burden.`;
+          } else if (lowerNeeds.includes('emi') || lowerNeeds.includes('installment') || lowerNeeds.includes('finance')) {
+            recommendation = `Based on your EMI and financing needs, I recommend:\n\n🏆 **Top Recommendation: Bajaj Finserv EMI Card**\n- Credit up to ₹3 Lacs\n- 100% Digital Process\n- No-cost EMI options\n- Wide merchant acceptance\n\n🥈 **Alternative: TATA Neu HDFC Card**\n- Up to 10% cashback as NeuCoins\n- Complimentary Lounge Access\n- TATA brand benefits\n- Annual fee: ₹499\n\nPerfect for converting purchases into easy EMIs.`;
+          } else if (lowerNeeds.includes('invest') || lowerNeeds.includes('sip') || lowerNeeds.includes('mutual fund')) {
+            recommendation = `Based on your investment preferences, I recommend:\n\n🏆 **Top Recommendation: Axis Mutual Fund SIP**\n- Start your SIP with just ₹100\n- Professional fund management\n- Diversified portfolio options\n- Market-linked returns\n\n🥈 **Alternative: Micro Mutual Fund**\n- 10 SIPs in 1 Transaction\n- Start with just ₹1000\n- Multiple fund options\n- Convenient bulk SIP setup\n\nPerfect for building long-term wealth through systematic investing.`;
+          } else if (lowerNeeds.includes('trading') || lowerNeeds.includes('stock') || lowerNeeds.includes('demat')) {
+            recommendation = `Based on your trading preferences, I recommend:\n\n🏆 **Top Recommendation: Upstox Demat Account**\n- Zero brokerage on equity delivery\n- Fast account opening\n- Advanced trading platform\n- No account opening fee\n\n🥈 **Alternative: Angel One Demat Account**\n- Flat trading charges\n- Research recommendations\n- Mobile trading app\n- Professional analysis tools\n\nGreat options for both beginners and experienced traders.`;
+          } else if (lowerNeeds.includes('savings') || lowerNeeds.includes('bank account') || lowerNeeds.includes('zero balance')) {
+            recommendation = `Based on your savings preferences, I recommend:\n\n🏆 **Top Recommendation: Kotak 811 Savings Account**\n- Open in just 3 minutes\n- Zero balance account\n- Digital banking features\n- No minimum balance required\n\n🥈 **Alternative: Tide Business Account** (for business)\n- Zero balance account\n- Earn up to 1.5% cashback\n- Business banking solutions\n- Perfect for entrepreneurs\n\nExcellent options for hassle-free banking.`;
+          } else {
+            recommendation = `Based on your requirements, I recommend:\n\n🏆 **Top Recommendation: HDFC Millennia**\n- Welcome benefit ₹300\n- 5X reward points online\n- Cashback on e-commerce\n- Well-balanced features\n\n🥈 **Alternative: SBI Cashback Card**\n- 5% Cashback on online spends\n- 1% fuel surcharge waiver\n- Great for everyday spending\n- Wide acceptance network\n\nThese cards offer a good balance of features and benefits for most users.`;
+          }
+
+          setAiRecommendation(recommendation);
+          setIsLoadingRecommendation(false);
+        }, 2000);
+      };
+
+      const scrollToSection = (sectionId) => {
+        document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+      };
+
+      const handleApplyNow = (link) => {
+        window.open(link, '_blank', 'noopener,noreferrer');
+      };
+
+      const goToCreditCards = () => {
+        document.getElementById('credit-cards')?.scrollIntoView({ behavior: 'smooth' });
+      };
+
+      const goToLoans = () => {
+        document.getElementById('loans')?.scrollIntoView({ behavior: 'smooth' });
+      };
+
+      const goToInvestments = () => {
+        document.getElementById('investments')?.scrollIntoView({ behavior: 'smooth' });
+      };
+
+      return (
+        <div className="min-h-screen bg-white">
+          {/* Sticky Header */}
+          <header className="sticky top-0 z-50 bg-white shadow-sm border-b">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center h-16">
+                <div className="flex items-center">
+                  <Image
+                    src="https://static.readdy.ai/image/d5e790301ee3a0515674f3f81e61df70/8190a21123a641b5c0dbcfbaa4a1c4bc.png"
+                    alt="Financial Sathi Logo"
+                    width={40}
+                    height={40}
+                    className="mr-3"
+                  />
+                  <h1 className="text-2xl font-bold text-blue-600" style={{ fontFamily: 'Pacifico, serif' }}>
+                    Financial Sathi
+                  </h1>
+                </div>
+                <nav className="hidden md:flex space-x-8">
+                  <button 
+                    onClick={() => scrollToSection('emi-calculator')}
+                    className="text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap cursor-pointer"
+                  >
+                    EMI Calculator
+                  </button>
+                  <button 
+                    onClick={() => scrollToSection('products')}
+                    className="text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap cursor-pointer"
+                  >
+                    Products
+                  </button>
+                  <button 
+                    onClick={() => scrollToSection('guides')}
+                    className="text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap cursor-pointer"
+                  >
+                    Guides
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </header>
+
+          {/* Hero Section */}
+          <section 
+            id="hero" 
+            className="relative bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 min-h-[70vh] flex items-center"
+            style={{
+              backgroundImage: `url('https://readdy.ai/api/search-image?query=Vibrant%20colorful%20financial%20technology%20background%20with%20geometric%20patterns%2C%20bright%20gradient%20colors%20purple%20pink%20orange%2C%20modern%20digital%20elements%2C%20festive%20and%20energetic%20atmosphere%2C%20abstract%20shapes%20and%20financial%20symbols%2C%20dynamic%20and%20eye-catching%20design&width=1920&height=800&seq=hero-colorful&orientation=landscape')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-900/70 via-pink-800/60 to-orange-700/70"></div>
+            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+              <div className="w-full max-w-2xl">
+                <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
+                  Find Your Perfect 
+                  <span className="text-yellow-300 drop-shadow-lg"> Financial Match </span>
+                  with AI
+                </h1>
+                <p className="text-lg text-purple-100 mb-6 leading-relaxed">
+                  Compare credit cards, loans, and financial products with our AI-powered recommendation engine. 
+                  Make smarter financial decisions with personalized insights.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button 
+                    onClick={() => scrollToSection('emi-calculator')}
+                    className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-6 py-3 rounded-full font-semibold text-base hover:from-yellow-500 hover:to-orange-500 transition-all transform hover:scale-105 whitespace-nowrap cursor-pointer shadow-lg"
+                  >
+                    EMI Calculator
+                  </button>
+                  <button 
+                    onClick={() => scrollToSection('products')}
+                    className="bg-gradient-to-r from-green-400 to-blue-400 text-white px-6 py-3 rounded-full font-semibold text-base hover:from-green-500 hover:to-blue-500 transition-all transform hover:scale-105 whitespace-nowrap cursor-pointer shadow-lg"
+                  >
+                    Explore Products
+                  </button>
+                  <button 
+                    onClick={() => handleApplyNow(creditScoreCheck.link)}
+                    className="bg-transparent border-2 border-white text-white px-6 py-3 rounded-full font-semibold text-base hover:bg-white hover:text-purple-600 transition-all transform hover:scale-105 whitespace-nowrap cursor-pointer shadow-lg"
+                  >
+                    Check Credit Score FREE
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* EMI Calculator Section - Moved Up */}
+          <section id="emi-calculator" className="py-16 bg-gradient-to-br from-blue-50 to-purple-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-12">
+                <h2 className="text-4xl font-bold text-gray-900 mb-4"> EMI Calculator</h2>
+                <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                  Calculate your monthly EMI instantly and plan your finances better
+                </p>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-xl p-8 max-w-4xl mx-auto">
+                <div className="grid lg:grid-cols-3 gap-8">
+                  {/* Calculator Inputs */}
+                  <div className="lg:col-span-2 space-y-6">
+                    {/* Loan Amount */}
+                    <div>
+                      <div className="flex justify-between items-center mb-3">
+                        <label className="text-lg font-semibold text-gray-700">Loan Amount</label>
+                        <span className="text-2xl font-bold text-blue-600">₹{loanAmount.toLocaleString()}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="50000"
+                        max="10000000"
+                        step="50000"
+                        value={loanAmount}
+                        onChange={(e) => setLoanAmount(Number(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                      />
+                      <div className="flex justify-between text-sm text-gray-500 mt-1">
+                        <span>₹50K</span>
+                        <span>₹1Cr</span>
+                      </div>
+                    </div>
+
+                    {/* Interest Rate */}
+                    <div>
+                      <div className="flex justify-between items-center mb-3">
+                        <label className="text-lg font-semibold text-gray-700">Interest Rate (Annual)</label>
+                        <span className="text-2xl font-bold text-green-600">{interestRate}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="6"
+                        max="30"
+                        step="0.5"
+                        value={interestRate}
+                        onChange={(e) => setInterestRate(Number(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                      />
+                      <div className="flex justify-between text-sm text-gray-500 mt-1">
+                        <span>6%</span>
+                        <span>30%</span>
+                      </div>
+                    </div>
+
+                    {/* Tenure */}
+                    <div>
+                      <div className="flex justify-between items-center mb-3">
+                        <label className="text-lg font-semibold text-gray-700">Loan Tenure</label>
+                        <span className="text-2xl font-bold text-purple-600">{tenure} months</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="6"
+                        max="360"
+                        step="6"
+                        value={tenure}
+                        onChange={(e) => setTenure(Number(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                      />
+                      <div className="flex justify-between text-sm text-gray-500 mt-1">
+                        <span>6 months</span>
+                        <span>30 years</span>
+                      </div>
+                    </div>
+
+                    {/* Quick Presets */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => {
+                          setLoanAmount(500000);
+                          setInterestRate(12);
+                          setTenure(36);
+                        }}
+                        className="bg-blue-100 text-blue-800 py-2 px-3 rounded-lg font-semibold hover:bg-blue-200 transition-colors text-sm"
+                      >
+                        Personal Loan
+                        <div className="text-xs font-normal">₹5L, 12%, 3yr</div>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setLoanAmount(800000);
+                          setInterestRate(9.5);
+                          setTenure(84);
+                        }}
+                        className="bg-green-100 text-green-800 py-2 px-3 rounded-lg font-semibold hover:bg-green-200 transition-colors text-sm"
+                      >
+                        Car Loan
+                        <div className="text-xs font-normal">₹8L, 9.5%, 7yr</div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* EMI Result */}
+                  <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6">
+                    <div className="text-center">
+                      <h3 className="text-lg font-semibold text-gray-700 mb-2">Monthly EMI</h3>
+                      <div className="text-3xl font-bold text-blue-600 mb-4">₹{emi.toLocaleString()}</div>
+                      
+                      <div className="space-y-3 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Principal:</span>
+                          <span className="font-semibold">₹{loanAmount.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Total Interest:</span>
+                          <span className="font-semibold text-red-600">₹{(emi * tenure - loanAmount).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between border-t pt-2">
+                          <span className="text-gray-600">Total Amount:</span>
+                          <span className="font-bold">₹{(emi * tenure).toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      <Link href="/emi-calculator">
+                        <button className="w-full mt-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all cursor-pointer">
+                          Detailed Calculator
+                        </button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Products Section */}
+          <section id="products" className="py-20 bg-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-16">
+                <h2 className="text-4xl font-bold text-gray-900 mb-4">Financial Products</h2>
+                <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                  Discover the best financial products tailored to your needs
+                </p>
+              </div>
+
+              {/* Quick Navigation Cards */}
+              <div className="grid md:grid-cols-3 gap-6 mb-16">
+                <button 
+                  onClick={goToCreditCards}
+                  className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl p-6 text-left hover:shadow-lg transition-all cursor-pointer border-2 border-transparent hover:border-blue-200"
+                >
+                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mb-4">
+                    <i className="ri-bank-card-line text-2xl text-white"></i>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">💳 Credit Cards</h3>
+                  <p className="text-gray-600">Discover cashback, travel, and lifestyle credit cards</p>
+                </button>
+                
+                <button 
+                  onClick={goToLoans}
+                  className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl p-6 text-left hover:shadow-lg transition-all cursor-pointer border-2 border-transparent hover:border-green-200"
+                >
+                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mb-4">
+                    <i className="ri-money-rupee-circle-line text-2xl text-white"></i>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">💰 Personal Loans</h3>
+                  <p className="text-gray-600">Get instant loans at competitive interest rates</p>
+                </button>
+                
+                <button 
+                  onClick={goToInvestments}
+                  className="bg-gradient-to-br from-purple-50 to-pink-100 rounded-xl p-6 text-left hover:shadow-lg transition-all cursor-pointer border-2 border-transparent hover:border-purple-200"
+                >
+                  <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mb-4">
+                    <i className="ri-line-chart-line text-2xl text-white"></i>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">📈 Investments</h3>
+                  <p className="text-gray-600">Start SIP, mutual funds, and savings accounts</p>
+                </button>
+              </div>
+
+              {/* Credit Score Check Section */}
+              <div className="mb-16">
+                <div className="max-w-2xl mx-auto bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-8 border-2 border-green-200">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <i className="ri-award-line text-2xl text-white"></i>
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4">✨ Free Credit Score Check</h3>
+                    <ul className="space-y-2 mb-6">
+                      {creditScoreCheck.features.map((feature, index) => (
+                        <li key={index} className="text-gray-700 flex items-center justify-center">
+                          <span className="text-green-500 mr-2">✓</span>
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <button 
+                      onClick={() => handleApplyNow(creditScoreCheck.link)}
+                      className="bg-green-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-green-700 transition-colors whitespace-nowrap cursor-pointer"
+                    >
+                      Check Score for FREE
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Credit Cards Section */}
+              <div id="credit-cards" className="mb-20">
+                <div className="flex justify-between items-center mb-8">
+                  <h3 className="text-3xl font-bold text-gray-900">💳 Credit Cards & EMI Cards</h3>
+                  <button
+                    onClick={() => setShowRecommendModal(true)}
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-full font-semibold hover:from-purple-600 hover:to-pink-600 transition-all whitespace-nowrap cursor-pointer"
+                  >
+                    Get AI Recommendation
+                  </button>
+                </div>
+
+                {/* Filter Buttons */}
+                <div className="flex flex-wrap gap-3 mb-8">
+                  {['all', 'cashback', 'travel', 'lifestyle', 'emi'].map(filter => (
+                    <button
+                      key={filter}
+                      onClick={() => setActiveFilter(filter)}
+                      className={`px-6 py-2 rounded-full font-medium transition-colors whitespace-nowrap cursor-pointer ${ 
+                        activeFilter === filter 
+                          ? 'bg-blue-600 text-white' 
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
+                      }`}
+                    >
+                      {filter === 'emi' ? 'EMI Cards' : filter.charAt(0).toUpperCase() + filter.slice(1)}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Credit Cards Grid */}
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredCards.map(card => (
+                    <div key={card.id} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow border border-gray-100 p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-3xl">💳</span>
+                        <div className="flex items-center">
+                          <span className="text-yellow-400 mr-1">⭐</span>
+                          <span className="text-sm text-gray-600">{card.rating}</span>
+                        </div>
+                      </div>
+                      <h4 className="text-xl font-bold text-gray-900 mb-2">{card.name}</h4>
+                      <p className="text-gray-600 mb-4">{card.bank}</p>
+                      <ul className="space-y-2 mb-4">
+                        {card.features.map((feature, index) => (
+                          <li key={index} className="text-sm text-gray-700 flex items-start">
+                            <span className="text-green-500 mr-2">✓</span>
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="text-sm text-gray-500 mb-4">{card.fees}</p>
+                      <button 
+                        onClick={() => handleApplyNow(card.link)}
+                        className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors whitespace-nowrap cursor-pointer"
+                      >
+                        Apply Now
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Loans Section */}
+              <div id="loans" className="mb-20">
+                <h3 className="text-3xl font-bold text-gray-900 mb-8">💰 Personal Loans & Credit Lines</h3>
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {loans.map(loan => (
+                    <div key={loan.id} className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-6 border border-gray-200">
+                      <h4 className="text-lg font-bold text-gray-900 mb-4">{loan.name}</h4>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Provider:</span>
+                          <span className="font-semibold text-sm">{loan.bank}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Rate:</span>
+                          <span className="font-semibold text-green-600 text-sm">{loan.rate}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Amount:</span>
+                          <span className="font-semibold text-sm">{loan.amount}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Tenure:</span>
+                          <span className="font-semibold text-sm">{loan.tenure}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Special:</span>
+                          <span className="font-semibold text-sm">{loan.processing}</span>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => handleApplyNow(loan.link)}
+                        className="w-full mt-4 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors whitespace-nowrap cursor-pointer"
+                      >
+                        Apply Now
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Investment Section */}
+              <div id="investments" className="mb-20">
+                <h3 className="text-3xl font-bold text-gray-900 mb-8">🏦 Mutual Funds & SIP</h3>
+                <div className="grid md:grid-cols-2 gap-6">
+                  {investmentProducts.map(product => (
+                    <div key={product.id} className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200">
+                      <h4 className="text-xl font-bold text-gray-900 mb-4">{product.name}</h4>
+                      <p className="text-gray-600 mb-4">{product.provider}</p>
+                      <ul className="space-y-2 mb-4">
+                        {product.features.map((feature, index) => (
+                          <li key={index} className="text-sm text-gray-700 flex items-start">
+                            <span className="text-purple-500 mr-2">✓</span>
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="space-y-2 mb-4">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Min Investment:</span>
+                          <span className="font-semibold text-purple-600">{product.minInvestment}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Returns:</span>
+                          <span className="font-semibold">{product.returns}</span>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => handleApplyNow(product.link)}
+                        className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors whitespace-nowrap cursor-pointer"
+                      >
+                        Start SIP
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Investment & Savings Section */}
+              <div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-8">💰 Investment & Savings</h3>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {savingsInvestmentProducts.map(product => (
+                    <div key={product.id} className="bg-gradient-to-br from-orange-50 to-yellow-50 rounded-xl p-6 border border-orange-200">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${ 
+                          product.category === 'demat' ? 'bg-blue-100' :
+                          product.category === 'savings' ? 'bg-green-100' :
+                          product.category === 'business' ? 'bg-purple-100' :
+                          'bg-orange-100'
+                        }`}>
+                          <i className={`text-xl ${ 
+                            product.category === 'demat' ? 'ri-line-chart-line text-blue-600' :
+                            product.category === 'savings' ? 'ri-bank-line text-green-600' :
+                            product.category === 'business' ? 'ri-briefcase-line text-purple-600' :
+                            'ri-safe-line text-orange-600'
+                          }`}></i>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${ 
+                          product.category === 'demat' ? 'bg-blue-100 text-blue-800' :
+                          product.category === 'savings' ? 'bg-green-100 text-green-800' :
+                          product.category === 'business' ? 'bg-purple-100 text-purple-800' :
+                          'bg-orange-100 text-orange-800'
+                        }`}>
+                          {product.category.toUpperCase()}
+                        </span>
+                      </div>
+                      <h4 className="text-lg font-bold text-gray-900 mb-2">{product.name}</h4>
+                      <p className="text-gray-600 mb-4 text-sm">{product.provider}</p>
+                      <ul className="space-y-2 mb-4">
+                        {product.features.map((feature, index) => (
+                          <li key={index} className="text-sm text-gray-700 flex items-start">
+                            <span className="text-orange-500 mr-2 text-xs">✓</span>
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="text-xs text-gray-500 mb-4">{product.fees}</p>
+                      <button 
+                        onClick={() => handleApplyNow(product.link)}
+                        className={`w-full py-3 rounded-lg font-semibold transition-colors whitespace-nowrap cursor-pointer ${ 
+                          product.category === 'demat' ? 'bg-blue-600 hover:bg-blue-700 text-white' :
+                          product.category === 'savings' ? 'bg-green-600 hover:bg-green-700 text-white' :
+                          product.category === 'business' ? 'bg-purple-600 hover:bg-purple-700 text-white' :
+                          'bg-orange-600 hover:bg-orange-700 text-white'
+                        }`}
+                      >
+                        {product.category === 'demat' ? 'Open Account' :
+                         product.category === 'savings' ? 'Open Account' :
+                         product.category === 'business' ? 'Open Account' :
+                         'Invest Now'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* AI Recommendation Modal */}
+          {showRecommendModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+                <div className="p-6 border-b">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-2xl font-bold text-gray-900"> AI Card Recommender</h3>
+                    <button 
+                      onClick={() => {
+                        setShowRecommendModal(false);
+                        setUserNeeds('');
+                        setAiRecommendation('');
+                      }}
+                      className="text-gray-400 hover:text-gray-600 w-6 h-6 flex items-center justify-center cursor-pointer"
+                    >
+                      <i className="ri-close-line text-xl"></i>
+                    </button>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <p className="text-gray-600 mb-4">
+                    Describe your spending habits and preferences, and our AI will recommend the best credit cards for you.
+                  </p>
+                  <textarea
+                    value={userNeeds}
+                    onChange={(e) => setUserNeeds(e.target.value)}
+                    placeholder="e.g., I spend mostly on groceries, travel frequently, prefer cashback rewards..."
+                    className="w-full border border-gray-300 rounded-lg p-4 h-32 resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    maxLength={500}
+                  />
+                  <div className="text-sm text-gray-500 mb-4">
+                    {userNeeds.length}/500 characters
+                  </div>
+                  <button
+                    onClick={handleAIRecommendation}
+                    disabled={!userNeeds.trim() || isLoadingRecommendation}
+                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg font-semibold hover:from-purple-600 hover:to-pink-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  >
+                    {isLoadingRecommendation ? 'Getting AI Recommendation...' : 'Get AI Recommendation'}
+                  </button>
+
+                  {aiRecommendation && (
+                    <div className="mt-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6">
+                      <h4 className="text-lg font-bold text-gray-900 mb-4"> AI Recommendation</h4>
+                      <div className="whitespace-pre-line text-gray-700">
+                        {aiRecommendation}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Enhanced AI Chatbot with website knowledge */}
+          {showChatbot && (
+            <div className="fixed bottom-4 right-4 w-96 h-[500px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 border">
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 rounded-t-2xl text-white">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h4 className="font-bold">Financial Sathi AI</h4>
+                    <p className="text-sm opacity-90">Multilingual Assistant</p>
+                  </div>
+                  <button 
+                    onClick={() => setShowChatbot(false)}
+                    className="text-white hover:text-gray-200 w-6 h-6 flex items-center justify-center cursor-pointer"
+                  >
+                    <i className="ri-close-line text-xl"></i>
+                  </button>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {chatMessages.map((message, index) => (
+                  <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[80%] p-3 rounded-2xl ${ 
+                      message.type === 'user' 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      <p className="text-sm whitespace-pre-line">{message.content}</p>
+                      <p className="text-xs opacity-70 mt-1">
+                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                <div ref={chatEndRef} />
+              </div>
+
+              <form onSubmit={handleChatSubmit} className="p-4 border-t">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Ask in any Indian language... / किसी भी भाषा में पूछें..."
+                    className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <button
+                    type="button"
+                    onClick={toggleVoiceRecognition}
+                    className={`p-2 rounded-full transition-colors w-10 h-10 flex items-center justify-center cursor-pointer ${ 
+                      isListening ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    <i className={`ri-mic-${isListening ? 'fill' : 'line'}`}></i>
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!chatInput.trim()}
+                    className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-10 h-10 flex items-center justify-center cursor-pointer whitespace-nowrap"
+                  >
+                    <i className="ri-send-plane-fill"></i>
+                  </button>
+                </div>
+                <div className="text-xs text-gray-500 mt-2 text-center">
+                  मैं हिंदी, अंग्रेजी और हिंग्लिश में जवाब दे सकता हूं | I can respond in Hindi, English & Hinglish
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Floating Chatbot Button */}
+          {!showChatbot && (
+            <button
+              onClick={() => setShowChatbot(true)}
+              className="fixed bottom-6 right-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-full shadow-lg hover:scale-110 transition-transform z-40 w-14 h-14 flex items-center justify-center cursor-pointer"
+            >
+              <i className="ri-robot-fill text-2xl"></i>
+            </button>
+          )}
+
+          {/* Footer */}
+          <footer className="bg-gray-900 text-white py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid md:grid-cols-4 gap-8">
+                <div>
+                  <h3 className="text-xl font-bold mb-4" style={{ fontFamily: 'Pacifico, serif' }}>
+                    Financial Sathi
+                  </h3>
+                  <p className="text-gray-400">
+                    Your trusted partner for smart financial decisions. Compare, analyze, and choose the best financial products with AI-powered insights.
+                  </p>
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-400">Contact: techunseen56@gmail.com</p>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-4">Products</h4>
+                  <ul className="space-y-2 text-gray-400">
+                    <li><button onClick={goToCreditCards} className="hover:text-white transition-colors cursor-pointer">Credit Cards</button></li>
+                    <li><button onClick={goToLoans} className="hover:text-white transition-colors cursor-pointer">Personal Loans</button></li>
+                    <li><button onClick={goToInvestments} className="hover:text-white transition-colors cursor-pointer">Mutual Funds</button></li>
+                    <li><button onClick={goToInvestments} className="hover:text-white transition-colors cursor-pointer">Savings Accounts</button></li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-4">Tools</h4>
+                  <ul className="space-y-2 text-gray-400">
+                    <li><Link href="/emi-calculator" className="hover:text-white transition-colors cursor-pointer">EMI Calculator</Link></li>
+                    <li><button onClick={() => handleApplyNow(creditScoreCheck.link)} className="hover:text-white transition-colors cursor-pointer">Credit Score Check</button></li>
+                    <li><button onClick={() => scrollToSection('emi-calculator')} className="hover:text-white transition-colors cursor-pointer">Loan Eligibility</button></li>
+                    <li><button onClick={() => setShowRecommendModal(true)} className="hover:text-white transition-colors cursor-pointer">AI Recommender</button></li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-4">Support</h4>
+                  <ul className="space-y-2 text-gray-400">
+                    <li><button onClick={() => setShowChatbot(true)} className="hover:text-white transition-colors cursor-pointer">Help Center</button></li>
+                    <li><Link href="/contact" className="hover:text-white transition-colors cursor-pointer">Contact Us</Link></li>
+                    <li><Link href="/privacy-policy" className="hover:text-white transition-colors cursor-pointer">Privacy Policy</Link></li>
+                    <li><Link href="/terms-of-service" className="hover:text-white transition-colors cursor-pointer">Terms of Service</Link></li>
+                  </ul>
+                </div>
+              </div>
+              <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 Financial Sathi. All rights reserved. | Made with ❤️ for better financial decisions</p>
+              </div>
+            </div>
+          </footer>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<FinancialSathi />, document.getElementById('root'));
+  </script>
+</body>
+</html>
