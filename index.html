@@ -1,0 +1,693 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financial Sathi - All Pages</title>
+  <meta name="description" content="Financial Sathi: Your trusted partner for smart financial decisions. Includes all pages and configurations.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.5.0/remixicon.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="scripts.js"></script>
+</head>
+<body class="min-h-screen bg-white">
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-white shadow-sm border-b">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center">
+          <img src="https://static.readdy.ai/image/d5e790301ee3a0515674f3f81e61df70/8190a21123a641b5c0dbcfbaa4a1c4bc.png" alt="Financial Sathi Logo" width="40" height="40" class="mr-3">
+          <h1 class="text-2xl font-bold text-blue-600" style="font-family: 'Pacifico', serif;">Financial Sathi</h1>
+        </div>
+        <nav class="hidden md:flex space-x-8">
+          <a href="#home" class="text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">Home</a>
+          <a href="#emi-calculator" class="text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">EMI Calculator</a>
+          <a href="#products" class="text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">Products</a>
+          <a href="#contact" class="text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">Contact</a>
+          <a href="#privacy-policy" class="text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">Privacy Policy</a>
+          <a href="#terms-of-service" class="text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">Terms of Service</a>
+          <a href="#configurations" class="text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">Configurations</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Home Section (from index.html) -->
+  <section id="home" class="py-12 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4">
+      <!-- Hero Section -->
+      <div class="relative bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 min-h-[70vh] flex items-center" style="background-image: url('https://readdy.ai/api/search-image?query=Vibrant%20colorful%20financial%20technology%20background%20with%20geometric%20patterns%2C%20bright%20gradient%20colors%20purple%20pink%20orange%2C%20modern%20digital%20elements%2C%20festive%20and%20energetic%20atmosphere%2C%20abstract%20shapes%20and%20financial%20symbols%2C%20dynamic%20and%20eye-catching%20design&width=1920&height=800&seq=hero-colorful&orientation=landscape'); background-size: cover; background-position: center;">
+        <div class="absolute inset-0 bg-gradient-to-r from-purple-900/70 via-pink-800/60 to-orange-700/70"></div>
+        <div class="relative max-w-7xl mx-auto px-4 w-full">
+          <div class="w-full max-w-2xl">
+            <h1 class="text-4xl font-bold text-white mb-4 leading-tight">Find Your Perfect <span class="text-yellow-300 drop-shadow-lg">Financial Match</span> with AI</h1>
+            <p class="text-lg text-purple-100 mb-6 leading-relaxed">Compare credit cards, loans, and financial products with our AI-powered recommendation engine. Make smarter financial decisions with personalized insights.</p>
+            <div class="flex flex-col sm:flex-row gap-3">
+              <button onclick="scrollToSection('emi-calculator')" class="bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-6 py-3 rounded-full font-semibold text-base hover:from-yellow-500 hover:to-orange-500 transition-all transform hover:scale-105 whitespace-nowrap cursor-pointer shadow-lg">EMI Calculator</button>
+              <button onclick="scrollToSection('products')" class="bg-gradient-to-r from-green-400 to-blue-400 text-white px-6 py-3 rounded-full font-semibold text-base hover:from-green-500 hover:to-blue-500 transition-all transform hover:scale-105 whitespace-nowrap cursor-pointer shadow-lg">Explore Products</button>
+              <button onclick="applyNow('https://sales.gromo.in/c/p0deEx81JDJb_6bEH0DHi?versionCode=null')" class="bg-transparent border-2 border-white text-white px-6 py-3 rounded-full font-semibold text-base hover:bg-white hover:text-purple-600 transition-all transform hover:scale-105 whitespace-nowrap cursor-pointer shadow-lg">Check Credit Score FREE</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- EMI Calculator Section -->
+      <div id="emi-calculator" class="py-16 bg-gradient-to-br from-blue-50 to-purple-50">
+        <div class="max-w-7xl mx-auto px-4">
+          <div class="text-center mb-12">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">EMI Calculator</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">Calculate your monthly EMI instantly and plan your finances better</p>
+          </div>
+          <div class="bg-white rounded-2xl shadow-xl p-8 max-w-4xl mx-auto">
+            <div class="grid lg:grid-cols-3 gap-8">
+              <div class="lg:col-span-2 space-y-6">
+                <div>
+                  <div class="flex justify-between items-center mb-3">
+                    <label class="text-lg font-semibold text-gray-700">Loan Amount</label>
+                    <span class="text-2xl font-bold text-blue-600" id="loan-amount-display">₹500,000</span>
+                  </div>
+                  <input type="range" min="50000" max="10000000" step="50000" value="500000" id="loan-amount" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider" oninput="updateEMI()">
+                  <div class="flex justify-between text-sm text-gray-500 mt-1">
+                    <span>₹50K</span>
+                    <span>₹1Cr</span>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between items-center mb-3">
+                    <label class="text-lg font-semibold text-gray-700">Interest Rate (Annual)</label>
+                    <span class="text-2xl font-bold text-green-600" id="interest-rate-display">12%</span>
+                  </div>
+                  <input type="range" min="6" max="30" step="0.5" value="12" id="interest-rate" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider" oninput="updateEMI()">
+                  <div class="flex justify-between text-sm text-gray-500 mt-1">
+                    <span>6%</span>
+                    <span>30%</span>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between items-center mb-3">
+                    <label class="text-lg font-semibold text-gray-700">Loan Tenure</label>
+                    <span class="text-2xl font-bold text-purple-600" id="tenure-display">24 months</span>
+                  </div>
+                  <input type="range" min="6" max="360" step="6" value="24" id="tenure" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider" oninput="updateEMI()">
+                  <div class="flex justify-between text-sm text-gray-500 mt-1">
+                    <span>6 months</span>
+                    <span>30 years</span>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <button onclick="setPreset(500000, 12, 36)" class="bg-blue-100 text-blue-800 py-2 px-3 rounded-lg font-semibold hover:bg-blue-200 transition-colors text-sm">
+                    Personal Loan
+                    <div class="text-xs font-normal">₹5L, 12%, 3yr</div>
+                  </button>
+                  <button onclick="setPreset(800000, 9.5, 84)" class="bg-green-100 text-green-800 py-2 px-3 rounded-lg font-semibold hover:bg-green-200 transition-colors text-sm">
+                    Car Loan
+                    <div class="text-xs font-normal">₹8L, 9.5%, 7yr</div>
+                  </button>
+                </div>
+              </div>
+              <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6">
+                <div class="text-center">
+                  <h3 class="text-lg font-semibold text-gray-700 mb-2">Monthly EMI</h3>
+                  <div class="text-3xl font-bold text-blue-600 mb-4" id="emi-result">₹0</div>
+                  <div class="space-y-3 text-sm">
+                    <div class="flex justify-between">
+                      <span class="text-gray-600">Principal:</span>
+                      <span class="font-semibold" id="principal-display">₹500,000</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-600">Total Interest:</span>
+                      <span class="font-semibold text-red-600" id="interest-display">₹0</span>
+                    </div>
+                    <div class="flex justify-between border-t pt-2">
+                      <span class="text-gray-600">Total Amount:</span>
+                      <span class="font-bold" id="total-amount-display">₹0</span>
+                    </div>
+                  </div>
+                  <a href="#emi-calculator" class="w-full mt-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all cursor-pointer inline-block text-center">Detailed Calculator</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Products Section -->
+      <div id="products" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+          <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">Financial Products</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">Discover the best financial products tailored to your needs</p>
+          </div>
+          <div class="grid md:grid-cols-3 gap-6 mb-16">
+            <button onclick="scrollToSection('credit-cards')" class="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl p-6 text-left hover:shadow-lg transition-all cursor-pointer border-2 border-transparent hover:border-blue-200">
+              <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mb-4">
+                <i class="ri-bank-card-line text-2xl text-white"></i>
+              </div>
+              <h3 class="text-xl font-bold text-gray-900 mb-2">💳 Credit Cards</h3>
+              <p class="text-gray-600">Discover cashback, travel, and lifestyle credit cards</p>
+            </button>
+            <button onclick="scrollToSection('loans')" class="bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl p-6 text-left hover:shadow-lg transition-all cursor-pointer border-2 border-transparent hover:border-green-200">
+              <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mb-4">
+                <i class="ri-money-rupee-circle-line text-2xl text-white"></i>
+              </div>
+              <h3 class="text-xl font-bold text-gray-900 mb-2">💰 Personal Loans</h3>
+              <p class="text-gray-600">Get instant loans at competitive interest rates</p>
+            </button>
+            <button onclick="scrollToSection('investments')" class="bg-gradient-to-br from-purple-50 to-pink-100 rounded-xl p-6 text-left hover:shadow-lg transition-all cursor-pointer border-2 border-transparent hover:border-purple-200">
+              <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mb-4">
+                <i class="ri-line-chart-line text-2xl text-white"></i>
+              </div>
+              <h3 class="text-xl font-bold text-gray-900 mb-2">📈 Investments</h3>
+              <p class="text-gray-600">Start SIP, mutual funds, and savings accounts</p>
+            </button>
+          </div>
+          <div class="mb-16">
+            <div class="max-w-2xl mx-auto bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-8 border-2 border-green-200">
+              <div class="text-center">
+                <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i class="ri-award-line text-2xl text-white"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">✨ Free Credit Score Check</h3>
+                <ul class="space-y-2 mb-6">
+                  <li class="text-gray-700 flex items-center justify-center"><span class="text-green-500 mr-2">✓</span>Check score for FREE</li>
+                  <li class="text-gray-700 flex items-center justify-center"><span class="text-green-500 mr-2">✓</span>Customised recommendations</li>
+                  <li class="text-gray-700 flex items-center justify-center"><span class="text-green-500 mr-2">✓</span>Simple & quick process</li>
+                </ul>
+                <button onclick="applyNow('https://sales.gromo.in/c/p0deEx81JDJb_6bEH0DHi?versionCode=null')" class="bg-green-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-green-700 transition-colors whitespace-nowrap cursor-pointer">Check Score for FREE</button>
+              </div>
+            </div>
+          </div>
+          <!-- Credit Cards Section -->
+          <div id="credit-cards" class="mb-20">
+            <div class="flex justify-between items-center mb-8">
+              <h3 class="text-3xl font-bold text-gray-900">💳 Credit Cards & EMI Cards</h3>
+              <button onclick="showRecommendModal()" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-full font-semibold hover:from-purple-600 hover:to-pink-600 transition-all whitespace-nowrap cursor-pointer">Get AI Recommendation</button>
+            </div>
+            <div class="flex flex-wrap gap-3 mb-8">
+              <button onclick="filterCards('all')" class="px-6 py-2 rounded-full font-medium transition-colors whitespace-nowrap cursor-pointer bg-blue-600 text-white">All</button>
+              <button onclick="filterCards('cashback')" class="px-6 py-2 rounded-full font-medium transition-colors whitespace-nowrap cursor-pointer bg-gray-100 text-gray-700 hover:bg-gray-200">Cashback</button>
+              <button onclick="filterCards('travel')" class="px-6 py-2 rounded-full font-medium transition-colors whitespace-nowrap cursor-pointer bg-gray-100 text-gray-700 hover:bg-gray-200">Travel</button>
+              <button onclick="filterCards('lifestyle')" class="px-6 py-2 rounded-full font-medium transition-colors whitespace-nowrap cursor-pointer bg-gray-100 text-gray-700 hover:bg-gray-200">Lifestyle</button>
+              <button onclick="filterCards('emi')" class="px-6 py-2 rounded-full font-medium transition-colors whitespace-nowrap cursor-pointer bg-gray-100 text-gray-700 hover:bg-gray-200">EMI Cards</button>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="credit-cards-grid">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
+          <!-- Loans Section -->
+          <div id="loans" class="mb-20">
+            <h3 class="text-3xl font-bold text-gray-900 mb-8">💰 Personal Loans & Credit Lines</h3>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6" id="loans-grid">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
+          <!-- Investment Section -->
+          <div id="investments" class="mb-20">
+            <h3 class="text-3xl font-bold text-gray-900 mb-8">🏦 Mutual Funds & SIP</h3>
+            <div class="grid md:grid-cols-2 gap-6" id="investments-grid">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
+          <!-- Investment & Savings Section -->
+          <div>
+            <h3 class="text-3xl font-bold text-gray-900 mb-8">💰 Investment & Savings</h3>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="savings-investments-grid">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section (from contact.html) -->
+  <section id="contact" class="py-12 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-4xl font-bold text-gray-900 mb-4">Contact Us</h2>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto">We're here to help you with your financial queries. Reach out to us!</p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Send Us a Message</h3>
+          <form onsubmit="handleContactSubmit(event)">
+            <div class="space-y-4">
+              <div>
+                <label for="name" class="block text-sm font-semibold text-gray-700">Name</label>
+                <input type="text" id="name" required class="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Your Name">
+              </div>
+              <div>
+                <label for="email" class="block text-sm font-semibold text-gray-700">Email</label>
+                <input type="email" id="email" required class="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Your Email">
+              </div>
+              <div>
+                <label for="message" class="block text-sm font-semibold text-gray-700">Message</label>
+                <textarea id="message" required class="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 h-32 resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Your Message"></textarea>
+              </div>
+              <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all">Send Message</button>
+            </div>
+          </form>
+        </div>
+        <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6">
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Contact Information</h3>
+          <div class="space-y-4">
+            <div class="flex items-center">
+              <i class="ri-mail-line text-2xl text-blue-600 mr-3"></i>
+              <p class="text-gray-700">Email: <a href="mailto:techunseen56@gmail.com" class="text-blue-600 hover:underline">techunseen56@gmail.com</a></p>
+            </div>
+            <div class="flex items-center">
+              <i class="ri-phone-line text-2xl text-blue-600 mr-3"></i>
+              <p class="text-gray-700">Phone: +91-123-456-7890</p>
+            </div>
+            <div class="flex items-center">
+              <i class="ri-map-pin-line text-2xl text-blue-600 mr-3"></i>
+              <p class="text-gray-600">Address: Financial Sathi, Mumbai, India</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EMI Calculator Page (from emi-calculator.html) -->
+  <section id="emi-calculator-page" class="py-16 bg-gradient-to-br from-blue-50 to-purple-50">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-4xl font-bold text-gray-900 mb-4">Advanced EMI Calculator</h2>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">Plan your loan repayments with our detailed EMI calculator.</p>
+      </div>
+      <div class="bg-white rounded-2xl shadow-xl p-8 max-w-4xl mx-auto">
+        <div class="grid lg:grid-cols-3 gap-8">
+          <div class="lg:col-span-2 space-y-6">
+            <div>
+              <div class="flex justify-between items-center mb-3">
+                <label class="text-lg font-semibold text-gray-700">Loan Amount</label>
+                <span class="text-2xl font-bold text-blue-600" id="loan-amount-display-page">₹500,000</span>
+              </div>
+              <input type="range" min="50000" max="10000000" step="50000" value="500000" id="loan-amount-page" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider" oninput="updateEMI('page')">
+              <div class="flex justify-between text-sm text-gray-500 mt-1">
+                <span>₹50K</span>
+                <span>₹1Cr</span>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between items-center mb-3">
+                <label class="text-lg font-semibold text-gray-700">Interest Rate (Annual)</label>
+                <span class="text-2xl font-bold text-green-600" id="interest-rate-display-page">12%</span>
+              </div>
+              <input type="range" min="6" max="30" step="0.5" value="12" id="interest-rate-page" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider" oninput="updateEMI('page')">
+              <div class="flex justify-between text-sm text-gray-500 mt-1">
+                <span>6%</span>
+                <span>30%</span>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between items-center mb-3">
+                <label class="text-lg font-semibold text-gray-700">Loan Tenure</label>
+                <span class="text-2xl font-bold text-purple-600" id="tenure-display-page">24 months</span>
+              </div>
+              <input type="range" min="6" max="360" step="6" value="24" id="tenure-page" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider" oninput="updateEMI('page')">
+              <div class="flex justify-between text-sm text-gray-500 mt-1">
+                <span>6 months</span>
+                <span>30 years</span>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <button onclick="setPreset(500000, 12, 36, 'page')" class="bg-blue-100 text-blue-800 py-2 px-3 rounded-lg font-semibold hover:bg-blue-200 transition-colors text-sm">
+                Personal Loan
+                <div class="text-xs font-normal">₹5L, 12%, 3yr</div>
+              </button>
+              <button onclick="setPreset(800000, 9.5, 84, 'page')" class="bg-green-100 text-green-800 py-2 px-3 rounded-lg font-semibold hover:bg-green-200 transition-colors text-sm">
+                Car Loan
+                <div class="text-xs font-normal">₹8L, 9.5%, 7yr</div>
+              </button>
+            </div>
+          </div>
+          <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6">
+            <div class="text-center">
+              <h3 class="text-lg font-semibold text-gray-700 mb-2">Monthly EMI</h3>
+              <div class="text-3xl font-bold text-blue-600 mb-4" id="emi-result-page">₹0</div>
+              <div class="space-y-3 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Principal:</span>
+                  <span class="font-semibold" id="principal-display-page">₹500,000</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Total Interest:</span>
+                  <span class="font-semibold text-red-600" id="interest-display-page">₹0</span>
+                </div>
+                <div class="flex justify-between border-t pt-2">
+                  <span class="text-gray-600">Total Amount:</span>
+                  <span class="font-bold" id="total-amount-display-page">₹0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Privacy Policy Section (from privacy-policy.html) -->
+  <section id="privacy-policy" class="py-12 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-4xl font-bold text-gray-900 mb-4">Privacy Policy</h2>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto">Your privacy is important to us. Learn how we protect your data.</p>
+      </div>
+      <div class="bg-white rounded-xl shadow-lg p-8 max-w-4xl mx-auto">
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-4">1. Information We Collect</h3>
+            <p class="text-gray-600">We collect personal information such as your name, email address, and financial preferences when you use our services, including the EMI calculator, contact form, or AI chatbot. We may also collect usage data to improve our platform.</p>
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-4">2. How We Use Your Information</h3>
+            <p class="text-gray-600">Your information is used to provide personalized financial recommendations, process inquiries, and enhance user experience. We do not sell or share your data with third parties except as required by law or with your consent.</p>
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-4">3. Data Security</h3>
+            <p class="text-gray-600">We implement industry-standard security measures to protect your data from unauthorized access or disclosure.</p>
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-4">4. Cookies</h3>
+            <p class="text-gray-600">We use cookies to track usage and improve our services. You can opt-out via your browser settings.</p>
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-4">5. Contact Us</h3>
+            <p class="text-gray-600">For questions about our privacy practices, contact us at <a href="mailto:techunseen56@gmail.com" class="text-blue-600 hover:underline">techunseen56@gmail.com</a>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Terms of Service Section (from terms-of-service.html) -->
+  <section id="terms-of-service" class="py-12 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-4xl font-bold text-gray-900 mb-4">Terms of Service</h2>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto">Understand the terms for using Financial Sathi's services.</p>
+      </div>
+      <div class="bg-white rounded-xl shadow-lg p-8 max-w-4xl mx-auto">
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-4">1. Acceptance of Terms</h3>
+            <p class="text-gray-600">By using Financial Sathi, you agree to these Terms of Service. If you do not agree, please do not use our services.</p>
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-4">2. Use of Services</h3>
+            <p class="text-gray-600">Our platform provides tools like EMI calculators and AI recommendations. You agree to use these tools for lawful purposes only.</p>
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-4">3. User Responsibilities</h3>
+            <p class="text-gray-600">You are responsible for the accuracy of the information you provide and for maintaining the confidentiality of your account.</p>
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-4">4. Limitation of Liability</h3>
+            <p class="text-gray-600">Financial Sathi is not liable for any financial decisions made based on our tools or recommendations.</p>
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-4">5. Contact Us</h3>
+            <p class="text-gray-600">For questions about these terms, contact us at <a href="mailto:techunseen56@gmail.com" class="text-blue-600 hover:underline">techunseen56@gmail.com</a>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Configurations Section -->
+  <section id="configurations" class="py-12 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-4xl font-bold text-gray-900 mb-4">Project Configurations</h2>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto">Configuration files for the Financial Sathi project.</p>
+      </div>
+      <div class="space-y-8">
+        <!-- tsconfig.json -->
+        <div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">TypeScript Configuration (tsconfig.json)</h3>
+          <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto">
+{
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+          </pre>
+        </div>
+        <!-- postcss.config.mjs -->
+        <div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">PostCSS Configuration (postcss.config.mjs)</h3>
+          <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto">
+/** @type {import('postcss-load-config').Config} */
+const config = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};
+
+export default config;
+          </pre>
+        </div>
+        <!-- tailwind.config.js -->
+        <div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Tailwind Configuration (tailwind.config.js)</h3>
+          <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto">
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ["Geist", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "sans-serif"],
+      },
+    },
+  },
+  plugins: [],
+};
+          </pre>
+        </div>
+        <!-- package.json -->
+        <div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Package JSON (package.json)</h3>
+          <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto">
+{
+  "name": "financial-sathi",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@radix-ui/react-icons": "^1.3.0",
+    "next": "14.2.5",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-icons": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.5",
+    "postcss": "^8.4.41",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}
+          </pre>
+        </div>
+        <!-- next.config.ts -->
+        <div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Next.js Configuration (next.config.ts)</h3>
+          <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto">
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: "export",
+  images: {
+    unoptimized: true,
+  },
+};
+
+export default nextConfig;
+          </pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI Recommendation Modal -->
+  <div id="recommend-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+      <div class="p-6 border-b">
+        <div class="flex justify-between items-center">
+          <h3 class="text-2xl font-bold text-gray-900">AI Card Recommender</h3>
+          <button onclick="closeRecommendModal()" class="text-gray-400 hover:text-gray-600 w-6 h-6 flex items-center justify-center cursor-pointer">
+            <i class="ri-close-line text-xl"></i>
+          </button>
+        </div>
+      </div>
+      <div class="p-6">
+        <p class="text-gray-600 mb-4">Describe your spending habits and preferences, and our AI will recommend the best credit cards for you.</p>
+        <textarea id="user-needs" placeholder="e.g., I spend mostly on groceries, travel frequently, prefer cashback rewards..." class="w-full border border-gray-300 rounded-lg p-4 h-32 resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" maxlength="500"></textarea>
+        <div class="text-sm text-gray-500 mb-4" id="char-count">0/500 characters</div>
+        <button onclick="getAIRecommendation()" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg font-semibold hover:from-purple-600 hover:to-pink-600 transition-all whitespace-nowrap" id="recommend-button">Get AI Recommendation</button>
+        <div id="recommendation-result" class="mt-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 hidden">
+          <h4 class="text-lg font-bold text-gray-900 mb-4">AI Recommendation</h4>
+          <div class="whitespace-pre-line text-gray-700" id="recommendation-text"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chatbot -->
+  <div id="chatbot" class="fixed bottom-4 right-4 w-96 h-[500px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 border hidden">
+    <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-4 rounded-t-2xl text-white">
+      <div class="flex justify-between items-center">
+        <div>
+          <h4 class="font-bold">Financial Sathi AI</h4>
+          <p class="text-sm opacity-90">Multilingual Assistant</p>
+        </div>
+        <button onclick="toggleChatbot()" class="text-white hover:text-gray-200 w-6 h-6 flex items-center justify-center cursor-pointer">
+          <i class="ri-close-line text-xl"></i>
+        </button>
+      </div>
+    </div>
+    <div class="flex-1 overflow-y-auto p-4 space-y-4" id="chat-messages">
+      <div class="flex justify-start">
+        <div class="max-w-[80%] p-3 rounded-2xl bg-gray-100 text-gray-800">
+          <p class="text-sm whitespace-pre-line">Hi! I'm your Financial Sathi AI assistant. How can I help you today?</p>
+          <p class="text-xs opacity-70 mt-1"></p>
+        </div>
+      </div>
+    </div>
+    <form onsubmit="handleChatSubmit(event)" class="p-4 border-t">
+      <div class="flex items-center space-x-2">
+        <input type="text" id="chat-input" placeholder="Ask in any Indian language... / किसी भी भाषा में पूछें..." class="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        <button type="button" onclick="toggleVoiceRecognition()" class="p-2 rounded-full transition-colors w-10 h-10 flex items-center justify-center cursor-pointer bg-gray-100 text-gray-600 hover:bg-gray-200" id="mic-button">
+          <i class="ri-mic-line"></i>
+        </button>
+        <button type="submit" class="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors w-10 h-10 flex items-center justify-center cursor-pointer whitespace-nowrap">
+          <i class="ri-send-plane-fill"></i>
+        </button>
+      </div>
+      <div class="text-xs text-gray-500 mt-2 text-center">मैं हिंदी, अंग्रेजी और हिंग्लिश में जवाब दे सकता हूं | I can respond in Hindi, English & Hinglish</div>
+    </form>
+  </div>
+  <button onclick="toggleChatbot()" class="fixed bottom-6 right-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-full shadow-lg hover:scale-110 transition-transform z-40 w-14 h-14 flex items-center justify-center cursor-pointer" id="chatbot-button">
+    <i class="ri-robot-fill text-2xl"></i>
+  </button>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="grid md:grid-cols-4 gap-8">
+        <div>
+          <h3 class="text-xl font-bold mb-4" style="font-family: 'Pacifico', serif;">Financial Sathi</h3>
+          <p class="text-gray-400">Your trusted partner for smart financial decisions. Compare, analyze, and choose the best financial products with AI-powered insights.</p>
+          <div class="mt-4">
+            <p class="text-sm text-gray-400">Contact: techunseen56@gmail.com</p>
+          </div>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Products</h4>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="#credit-cards" class="hover:text-white transition-colors">Credit Cards</a></li>
+            <li><a href="#loans" class="hover:text-white transition-colors">Personal Loans</a></li>
+            <li><a href="#investments" class="hover:text-white transition-colors">Mutual Funds</a></li>
+            <li><a href="#investments" class="hover:text-white transition-colors">Savings Accounts</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Tools</h4>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="#emi-calculator-page" class="hover:text-white transition-colors">EMI Calculator</a></li>
+            <li><a href="https://sales.gromo.in/c/p0deEx81JDJb_6bEH0DHi?versionCode=null" class="hover:text-white transition-colors">Credit Score Check</a></li>
+            <li><a href="#emi-calculator" class="hover:text-white transition-colors">Loan Eligibility</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Support</h4>
+          <ul class="space-y-2 text-gray-400">
+            <li><button onclick="toggleChatbot()" class="hover:text-white transition-colors cursor-pointer">Help Center</button></li>
+            <li><a href="#contact" class="hover:text-white transition-colors">Contact Us</a></li>
+            <li><a href="#privacy-policy" class="hover:text-white transition-colors">Privacy Policy</a></li>
+            <li><a href="#terms-of-service" class="hover:text-white transition-colors">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+        <p>© 2024 Financial Sathi. All rights reserved. | Made with ❤️ for better financial decisions</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
